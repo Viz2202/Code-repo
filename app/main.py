@@ -59,3 +59,8 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content={"detail": "Internal server error"}
     )
+
+@app.route("/webhook", methods=["POST"])
+def github_webhook():
+    # handle the webhook
+    return "OK", 200
