@@ -1,11 +1,12 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 import logging
+import datetime
 
 from .config import settings
 from .webhook import webhook_router
 from .github_client import github_client
-
+from .analyzers.static_analyzers import StaticAnalyzer
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -61,7 +62,11 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 @app.route("/webhook", methods=["POST"])
-async def github_webhook():
+async def github_webhook(request: Request):
     # handle the webhook
-    return "OK", 200
+    response = await request.json()
+    allissues = StaticAnalyzer().analyze_files(response)
+    print("Time is " + str(datetime.datetime.now()))
+    print(f"Analyzed issues: {allissues}")
+    return JSONResponse(content={"message": "ok"}, status_code=200)
 

@@ -3,6 +3,8 @@ import json
 import logging
 from typing import List, Dict, Any
 from pathlib import Path
+from .get_file import GetFile
+import tempfile
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +22,9 @@ class StaticAnalyzer:
             
             if file_content:
                 # Write content to temporary file for analysis
-                temp_file = f"/tmp/temp_analysis_{Path(file_path).name}"
-                with open(temp_file, 'w') as f:
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".py", mode='w') as f:
                     f.write(file_content)
+                    temp_file = f.name 
                 analysis_file = temp_file
             else:
                 analysis_file = file_path
@@ -76,13 +78,22 @@ class StaticAnalyzer:
         logger.info(f"JavaScript analysis placeholder for {file_path}")
         return []
     
-    def analyze_files(self, file_dict: Dict[str, List[str]]) -> List[Dict[str, Any]]:
+    def analyze_files(self, response: Dict) -> List[Dict[str, Any]]:
         """Analyze multiple files grouped by type"""
+        commits = response.get('commits', [])[0]
+        modified_files = commits.get('modified', [])
+        added_files = commits.get('added', [])
+
+        file_dict = {
+            'python': modified_files + added_files,
+        }
+
         all_issues = []
         
         # Analyze Python files
         for py_file in file_dict.get('python', []):
-            issues = self.analyze_python_file(py_file)
+            file1=GetFile().fetch_file(py_file)
+            issues = self.analyze_python_file(py_file, file_content=file1)
             all_issues.extend(issues)
         
         # Analyze JavaScript files (Phase 2)
