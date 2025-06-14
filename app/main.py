@@ -64,5 +64,3 @@ async def global_exception_handler(request: Request, exc: Exception):
 async def github_webhook():
     # handle the webhook
     return "OK", 200
-
-#Hello
