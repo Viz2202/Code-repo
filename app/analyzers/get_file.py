@@ -1,9 +1,9 @@
 import requests
 import os
 class GetFile:
-    def fetch_file(self, file_path:str):
+    def fetch_file(self, file_path:str,commit_id:str):
         print(file_path)
-        url = "https://raw.githubusercontent.com/Viz2202/test/main/" + file_path
+        url = "https://raw.githubusercontent.com/Viz2202/test/main/" + file_path + "?ref=" + commit_id
         headers = {
             "Authorization": "Bearer " + os.getenv("GITHUB_TOKEN"),
             "Accept": "application/vnd.github.v3.raw"

@@ -7,3 +7,4 @@ pylint==3.0.3
 bandit==1.7.5
 cryptography
 pyngrok==4.1.0
+groq

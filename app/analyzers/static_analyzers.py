@@ -5,6 +5,7 @@ from typing import List, Dict, Any
 from pathlib import Path
 from .get_file import GetFile
 import tempfile
+from ..mygroq import MyGroq
 
 logger = logging.getLogger(__name__)
 
@@ -83,22 +84,26 @@ class StaticAnalyzer:
         commits = response.get('commits', [])[0]
         modified_files = commits.get('modified', [])
         added_files = commits.get('added', [])
+        commit_id = commits.get('id', '')
 
         file_dict = {
             'python': modified_files + added_files,
         }
 
         all_issues = []
+        strings = ""
         
         # Analyze Python files
         for py_file in file_dict.get('python', []):
-            file1=GetFile().fetch_file(py_file)
-            issues = self.analyze_python_file(py_file, file_content=file1)
+            file1=GetFile().fetch_file(py_file,commit_id)
+            issues= MyGroq.review(file1)
             all_issues.extend(issues)
+            for issue in all_issues:
+                strings += issue
         
         # Analyze JavaScript files (Phase 2)
         for js_file in file_dict.get('javascript', []):
             issues = self.analyze_javascript_file(js_file)
             all_issues.extend(issues)
         
-        return all_issues
+        return strings
