@@ -94,12 +94,11 @@ class StaticAnalyzer:
         strings = ""
         
         # Analyze Python files
-        for py_file in file_dict.get('python', []):
-            file1=GetFile().fetch_file(py_file,commit_id)
-            issues= MyGroq.review(file1)
-            all_issues.extend(issues)
-            for issue in all_issues:
-                strings += issue
+        file1= GetFile().fetch_file(commit_id)
+        print(file1)
+        for item in file1:
+            issues= MyGroq.review(item)
+            strings += issues
         
         # Analyze JavaScript files (Phase 2)
         for js_file in file_dict.get('javascript', []):

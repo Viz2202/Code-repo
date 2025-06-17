@@ -33,8 +33,8 @@ class MyGroq(Groq):
         stream=True,
         stop=None,
     )
-    reviews=[]
+    reviews=""
     for chunk in completion:
         reviewing=chunk.choices[0].delta.content or ""
-        reviews.append(reviewing)
+        reviews+=reviewing
     return reviews
