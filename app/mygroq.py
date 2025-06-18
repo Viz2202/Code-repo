@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 
 class MyGroq(Groq):
-  def review(file_text):
+  def review(change,file_text):
     load_dotenv()
     client = Groq(api_key= os.environ.get("GROQ_API_KEY"))
     completion = client.chat.completions.create(
@@ -12,22 +12,24 @@ class MyGroq(Groq):
           {
               "role": "system",
               "content": '''You are a senior software engineer performing a code review.
-              Please review the following code and provide:
-              1. Bug Detection: Identify potential logical or runtime bugs and look for syntax errors.
-              2. Improvements: Suggest code quality or performance improvements.
-              3. Security Concerns: Highlight any security vulnerabilities.
-              4. Best Practices: Recommend changes based on language-specific best practices.
-              5. Overall Feedback: General comments on design, style, and readability.
-              Include line numbers or function names in your feedback when applicable.
-              Respond in a structured and professional tone and make it concise(if possible 50 words or less).
-              '''
+              The input contains two parts separated by "!@#$%^&*()":
+              1. The patch (showing only the lines added, removed, or modified).
+              2. The full file content for context.
+              Please review only the lines present in the patch. Ignore issues which are not present in patch. Your review should include:
+              1. Bug Detection: Identify logical, runtime, or syntax bugs in the changed lines.
+              2. Improvements: Suggest improvements in performance or code quality within the changed lines.
+              3. Security Concerns: Highlight security risks in the patch if any.
+              4. Best Practices: Recommend improvements based on language-specific standards for only the changed lines.
+              5. Overall Feedback: Keep it concise and focused strictly on the patch.
+              Provide line numbers or function names if applicable. Keep the review professional and under 50 words if possible.
+              review ONLY the lines PRESENT in the PATCH.'''
           },
           {
             "role": "user",
-            "content": file_text
+            "content": change + "!@#$%^&*()" + file_text
           }
         ],
-        temperature=0.6,
+        temperature=0.1,
         max_completion_tokens=1024,
         top_p=1,
         stream=True,
