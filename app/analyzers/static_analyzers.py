@@ -106,14 +106,25 @@ class StaticAnalyzer:
         for file in changed_files:
             raw_url_and_patch.append({
                 'raw_url': file.get('raw_url'),
-                'patch': self.getchanges(file.get('patch', ''))
+                'patch': self.getchanges(file.get('patch', '')),
+                'file_name': file.get('filename')
             })
         all_issues = ""
+        file_name_and_issues = []
         # Analyze Python files
         changes_and_file= GetFile().fetch_file(raw_url_and_patch)
-        print("Changes and files fetched:", changes_and_file)
-        for change, file_text in changes_and_file:
+        for change, file_text, file_name in changes_and_file:
             issues= MyGroq.review(change,file_text)
-            all_issues+=issues+'\n'
-        
-        return all_issues
+            file_name_and_issues.append({
+                'file': file_name,  # Extract file name from patch
+                'issues': issues
+            })
+            # print("***********************************************************************************")
+            # print("***********************************************************************************")
+            # print("***********************************************************************************")
+            # print(f"Review for {file_name} completed.\n\n")
+            # print(issues)
+            # print("***********************************************************************************")
+            # print("***********************************************************************************")
+            # print("***********************************************************************************")
+        return file_name_and_issues

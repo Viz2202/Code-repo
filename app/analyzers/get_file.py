@@ -8,16 +8,16 @@ class GetFile:
             "Accept": "application/vnd.github.v3.raw"
         }
 
-        patch_and_full_file = []
+        patch_and_full_file_and_name = []
         for file in raw_url_and_patch:
             url= file.get("raw_url")
 
             full_file_response = requests.get(url, headers=headers)
             if full_file_response.status_code == 200:
                 file_text = full_file_response.text
-                patch_and_full_file.append((file.get("patch"), file_text))
+                patch_and_full_file_and_name.append((file.get("patch"), file_text, file.get("file_name")))
             else:
                 print("Failed to fetch file:", full_file_response.status_code)
                 break
 
-        return patch_and_full_file
+        return patch_and_full_file_and_name
