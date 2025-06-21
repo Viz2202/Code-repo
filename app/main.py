@@ -65,6 +65,8 @@ async def global_exception_handler(request: Request, exc: Exception):
 async def github_webhook(request: Request):
     # handle the webhook
     response = await request.json()
+    if response.get("action") not in ["opened","synchronize", "reopened"]:
+        return JSONResponse(content={"message": "ignored"}, status_code=200)
     allissues = StaticAnalyzer().analyze_files(response)
     print("Time is " + str(datetime.datetime.now()))
     print(f"Analyzed issues: {allissues}")

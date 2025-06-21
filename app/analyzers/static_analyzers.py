@@ -6,6 +6,8 @@ from pathlib import Path
 from .get_file import GetFile
 import tempfile
 from ..mygroq import MyGroq
+import os
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -79,28 +81,39 @@ class StaticAnalyzer:
         logger.info(f"JavaScript analysis placeholder for {file_path}")
         return []
     
+    def get_changed_files(self, response: Dict) -> List[str]:
+        repo_name = response.get('repository', {}).get('full_name', '')
+        pull_request_number = response.get('pull_request', {}).get('number')
+        changed_files_url = f"https://api.github.com/repos/{repo_name}/pulls/{pull_request_number}/files"
+        headers = {
+            "Authorization": "Bearer " + os.getenv("GITHUB_TOKEN"),
+            "Accept": "application/vnd.github+json"
+        }
+        response2 = requests.get(changed_files_url, headers=headers)
+        json_data = json.loads(response2.text)
+        return json_data
+    
+    def getchanges(self,strs):        
+        lines = strs.split('\n')
+        added_lines = [line[1:] for line in lines if line.startswith('+') and not line.startswith('+++')]
+        result= '\n'.join(added_lines)
+        return result
+    
     def analyze_files(self, response: Dict) -> List[Dict[str, Any]]:
         """Analyze multiple files grouped by type"""
-        commits = response.get('commits', [])[0]
-        modified_files = commits.get('modified', [])
-        added_files = commits.get('added', [])
-        commit_id = commits.get('id', '')
-
-        file_dict = {
-            'python': modified_files + added_files,
-        }
-
+        changed_files = self.get_changed_files(response)
+        raw_url_and_patch = []
+        for file in changed_files:
+            raw_url_and_patch.append({
+                'raw_url': file.get('raw_url'),
+                'patch': self.getchanges(file.get('patch', ''))
+            })
         all_issues = ""
-        
         # Analyze Python files
-        changes_and_file= GetFile().fetch_file(commit_id)
+        changes_and_file= GetFile().fetch_file(raw_url_and_patch)
         print("Changes and files fetched:", changes_and_file)
         for change, file_text in changes_and_file:
             issues= MyGroq.review(change,file_text)
             all_issues+=issues+'\n'
-        # Analyze JavaScript files (Phase 2)
-        for js_file in file_dict.get('javascript', []):
-            issues = self.analyze_javascript_file(js_file)
-            all_issues.extend(issues)
         
         return all_issues
