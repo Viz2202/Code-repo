@@ -16,7 +16,7 @@ class Database:
         # Logic to retrieve data from the specified path
         pass
 
-    def set_data(self, issuelist):
+    def set_data(self, issuelist: list):
         for item in issuelist:
             # Assuming item is a dictionary with 'file', 'issues', etc.
             doc_ref = db.collection("issues").document(item['repoid']+'/'+item['time'])

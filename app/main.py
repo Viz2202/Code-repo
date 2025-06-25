@@ -7,7 +7,7 @@ from .config import settings
 from .webhook import webhook_router
 from .github_client import github_client
 from .analyzers.static_analyzers import StaticAnalyzer
-from .firebase.firebase_database import Database
+from .firebase.firebase_database import Database as db
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -70,7 +70,7 @@ async def github_webhook(request: Request):
         return JSONResponse(content={"message": "ignored"}, status_code=200)
     allissues = StaticAnalyzer().analyze_files(response)
     print("Time is " + str(datetime.datetime.now()))
-    Database.set_data(allissues)
+    db.set_data(allissues)
     return JSONResponse(content={"message": "ok"}, status_code=200)
 
 
