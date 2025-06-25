@@ -7,7 +7,7 @@ db = firestore.client()
 class Database:
     def __init__(self):
         pass
-    
+
     def connect(self):
         # Logic to connect to the Firebase Realtime Database
         pass
@@ -19,7 +19,7 @@ class Database:
     def set_data(self, issuelist: list):
         for item in issuelist:
             # Assuming item is a dictionary with 'file', 'issues', etc.
-            doc_ref = db.collection("issues").document(item['repoid']+'/'+item['time'])
+            doc_ref = db.collection("issues").document(f"{item['repoid']}/{item['time']}")
             doc_ref.set({
                 "file": item['file'],
                 "issues": item['issues'],
