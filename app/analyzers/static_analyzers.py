@@ -8,6 +8,7 @@ import tempfile
 from ..mygroq import MyGroq
 import os
 import requests
+import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +103,9 @@ class StaticAnalyzer:
     def analyze_files(self, response: Dict) -> List[Dict[str, Any]]:
         """Analyze multiple files grouped by type"""
         changed_files = self.get_changed_files(response)
+        repo_name = response.get('repository', {}).get('full_name', '')
+        pull_request_number = response.get('pull_request', {}).get('number')
+        repoid= response.get('repository', {}).get('id', '')
         raw_url_and_patch = []
         for file in changed_files:
             raw_url_and_patch.append({
@@ -116,8 +120,12 @@ class StaticAnalyzer:
         for change, file_text, file_name in changes_and_file:
             issues= MyGroq.review(change,file_text)
             file_name_and_issues.append({
-                'file': file_name,  # Extract file name from patch
-                'issues': issues
+                'file': file_name,  
+                'issues': issues,
+                'repo_name': repo_name,
+                'pull_request_number': pull_request_number,
+                'repoid': repoid,
+                'time': str(datetime.datetime.now())
             })
             # print("***********************************************************************************")
             # print("***********************************************************************************")
