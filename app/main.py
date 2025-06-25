@@ -69,5 +69,6 @@ async def github_webhook(request: Request):
         return JSONResponse(content={"message": "ignored"}, status_code=200)
     allissues = StaticAnalyzer().analyze_files(response)
     print("Time is " + str(datetime.datetime.now()))
+    print(allissues)
     return JSONResponse(content={"message": "ok"}, status_code=200)
 
