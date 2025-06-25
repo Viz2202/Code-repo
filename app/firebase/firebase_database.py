@@ -5,9 +5,9 @@ firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 class Database:
-    def __init__(self, database_url: str):
-        self.database_url = database_url
-
+    def __init__(self):
+        pass
+    
     def connect(self):
         # Logic to connect to the Firebase Realtime Database
         pass
