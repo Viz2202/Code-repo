@@ -7,7 +7,7 @@ from .config import settings
 from .webhook import webhook_router
 from .github_client import github_client
 from .analyzers.static_analyzers import StaticAnalyzer
-from ..firebase.firebase_database import Database
+from .firebase.firebase_database import Database
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
