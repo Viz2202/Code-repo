@@ -1,6 +1,6 @@
 import firebase_admin
 from firebase_admin import credentials, firestore
-cred = credentials.Certificate("app/firebase/coderepo-214e5-firebase-adminsdk-fbsvc-714e2c0121.json") 
+cred = credentials.Certificate("./coderepo-214e5-firebase-adminsdk-fbsvc-b64e726eea.json") 
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
@@ -19,7 +19,9 @@ class Database:
     def set_data(self, issuelist: list):
         for item in issuelist:
             # Assuming item is a dictionary with 'file', 'issues', etc.
-            doc_ref = db.collection("issues").document(f"{item['repoid']}/{item['time']}")
+            safe_id = f"{item['repoid']}_{item['time']}"
+            doc_ref = db.collection("issues").document(safe_id)
+
             doc_ref.set({
                 "file": item['file'],
                 "issues": item['issues'],
