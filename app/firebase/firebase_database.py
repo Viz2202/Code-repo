@@ -1,6 +1,12 @@
 import firebase_admin
 from firebase_admin import credentials, firestore
-cred = credentials.Certificate("./coderepo-214e5-firebase-adminsdk-fbsvc-b64e726eea.json") 
+import os
+import json
+from dotenv import load_dotenv
+load_dotenv()
+firebase_json = os.environ.get("FIREBASE_CREDENTIALS")
+firebase_dict = json.loads(firebase_json)
+cred = credentials.Certificate(firebase_dict) 
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
@@ -37,3 +43,9 @@ class Database:
     def delete_data(self, path: str):
         # Logic to delete data at the specified path
         pass
+
+if __name__ == "__main__":
+    db_instance = Database()
+    # Example usage
+    db_instance.set_data([{"file": "example.py", "issues": ["issue1", "issue2"], "repo_name": "example_repo", "pull_request_number": 1, "repoid": "12345", "time": "2023-10-01T12:00:00"}])
+    # print(data)
