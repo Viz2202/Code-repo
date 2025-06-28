@@ -10,3 +10,4 @@ pyngrok==4.1.0
 groq
 gunicorn
 firebase-admin
+pydantic

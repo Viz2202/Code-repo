@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, APIRouter
 from fastapi.responses import JSONResponse
 import logging
 import datetime
@@ -8,6 +8,9 @@ from .webhook import webhook_router
 from .github_client import github_client
 from .analyzers.static_analyzers import StaticAnalyzer
 from .firebase.firebase_database import Database
+from .routes.user_routes import user_router
+from .routes.repo_routes import repo_router
+from .routes.pull_requests_routes import pull_request_router
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -28,6 +31,9 @@ app = FastAPI(
 
 # Include webhook router
 app.include_router(webhook_router, prefix="/webhook", tags=["webhook"])
+app.include_router(user_router, prefix="/users", tags=["users"])
+app.include_router(repo_router, prefix="/repos", tags=["repos"])
+app.include_router(pull_request_router, prefix="/pull-requests", tags=["pull_requests"])
 
 @app.get("/")
 async def root():
@@ -74,4 +80,12 @@ async def github_webhook(request: Request):
     return JSONResponse(content={"message": "ok"}, status_code=200)
 
 
+@app.route("/get-data",methods=["GET"])
+async def get_data(request: Request):
+    try:
+        data = Database().get_data("issues")
+        return JSONResponse(content=data, status_code=200)
+    except Exception as e:
+        logger.error(f"Error retrieving data: {e}")
+        raise HTTPException(status_code=500, detail="Error retrieving data")
 
