@@ -24,9 +24,10 @@ def get_pull_requests(repo_id: str):
 def get_all_remote_pull_requests(repo_id: str): 
     """Get all remote pull requests for a repository"""
     repo_details = db.collection('repos').document(repo_id).get().to_dict()
-    user_name = repo_details.get('user_id')
+    user_id = repo_details.get('user_id')
+    user_details_ref = db.collection('users').document(user_id).get().to_dict()
+    user_name = user_details_ref.get('github_username')
     repo_name = repo_details.get('repo_name')
-    
     github_url = f"https://api.github.com/repos/{user_name}/{repo_name}/pulls"
     response = requests.get(github_url)
     
