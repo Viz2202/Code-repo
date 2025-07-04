@@ -2,15 +2,16 @@ from fastapi import APIRouter
 from ..firebase.firebase_database import Database
 from pydantic import BaseModel
 import requests
+from ..analyzers.static_analyzers import StaticAnalyzer
 
 db = Database().connect()
 pull_request_router = APIRouter()
 
 class PullRequest(BaseModel):
     prnumber: int
+    repo_name: str
+    user_name: str
     repo_id: str
-    pr_status: str
-    info: list
 
 @pull_request_router.get("/{repo_id}")
 def get_pull_requests(repo_id: str):
@@ -30,15 +31,26 @@ def get_all_remote_pull_requests(repo_id: str):
     repo_name = repo_details.get('repo_name')
     github_url = f"https://api.github.com/repos/{user_name}/{repo_name}/pulls"
     response = requests.get(github_url)
-    
+    response_json= response.json()
+    list_of_prs = []
+    for pr in response_json:
+        pr_info = {
+            "title": pr.get("title"),
+            "number": pr.get("number"),
+            "source_branch": pr.get("head", {}).get("ref"),
+            "target_branch": pr.get("base", {}).get("ref"),
+        }
+        list_of_prs.append(pr_info)
     if response.status_code == 200:
-        return response.json()
+        return list_of_prs
     else:
         return {"error": "Failed to fetch pull requests from GitHub", "status_code": response.status_code}
     
 @pull_request_router.post("/")
-def add_pull_request(pull_request: PullRequest):
-    """Add a new pull request"""
-    pr_details_ref = db.collection('pull_requests').document(f"{pull_request.repo_id}_{pull_request.prnumber}")
-    pr_details_ref.set(pull_request.dict())
-    return {"message": "Pull request added successfully", "pr_id": f"{pull_request.repo_id}_{pull_request.prnumber}"}
+def analyze_pull_request(pull_request: PullRequest):
+    """Analyze a pull request"""
+    dict_pull_request = {"repository":{"full_name": f"{pull_request.user_name}/{pull_request.repo_name}",
+                                       id:f"{pull_request.repo_id}"},
+                         "pull_request": {"number": pull_request.prnumber}}
+    analyzer = StaticAnalyzer().analyze_files(dict_pull_request)
+    print(analyzer)
