@@ -11,3 +11,4 @@ groq
 gunicorn
 firebase-admin
 pydantic
+google-cloud

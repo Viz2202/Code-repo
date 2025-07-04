@@ -3,6 +3,7 @@ from ..firebase.firebase_database import Database
 from pydantic import BaseModel
 import requests
 from ..analyzers.static_analyzers import StaticAnalyzer
+from .issues_router import Issues
 
 db = Database().connect()
 pull_request_router = APIRouter()
@@ -50,7 +51,8 @@ def get_all_remote_pull_requests(repo_id: str):
 def analyze_pull_request(pull_request: PullRequest):
     """Analyze a pull request"""
     dict_pull_request = {"repository":{"full_name": f"{pull_request.user_name}/{pull_request.repo_name}",
-                                       id:f"{pull_request.repo_id}"},
+                                       "id":f"{pull_request.repo_id}"},
                          "pull_request": {"number": pull_request.prnumber}}
     analyzer = StaticAnalyzer().analyze_files(dict_pull_request)
-    print(analyzer)
+    Issues.set_data(analyzer)
+    return analyzer
