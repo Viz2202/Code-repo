@@ -34,6 +34,21 @@ class Issues:
         for doc in docs:
             issues.append(doc.to_dict())
         return issues
+    
+    def get_id(repo_id: str, pull_request_number: int):
+        """
+        Get issue data from the Firebase database.
+        :return: List of issues.
+        """
+        db = Database().connect()
+        issues_ref =db.collection('issues').where('__name__', '>=', db.collection('issues').document(f'{repo_id}_{pull_request_number}_')).where('__name__', '<', db.collection('issues').document(f'{repo_id}_{pull_request_number}_\uf8ff'))
+        docs = issues_ref.stream()
+        document_id = []
+        for doc in docs:
+            document_id.append(doc.id)
+        
+        return document_id
+
 
 @issues_router.get("/{repo_id}_{pull_request_number}")
 def get_issues(repo_id: str, pull_request_number: int):
@@ -43,3 +58,8 @@ def get_issues(repo_id: str, pull_request_number: int):
     """
     issues = Issues.get_data(repo_id, pull_request_number)
     return {"issues": issues}
+
+@issues_router.get("/ids/{repo_id}_{pull_request_number}")
+def get_id(repo_id: str, pull_request_number: int):
+    ids = Issues.get_id(repo_id, pull_request_number)
+    return {"ids": ids}

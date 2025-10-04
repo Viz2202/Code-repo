@@ -12,6 +12,23 @@ from .routes.user_routes import user_router
 from .routes.repo_routes import repo_router
 from .routes.pull_requests_routes import pull_request_router
 from .routes.issues_router import Issues, issues_router
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from .routes.login_router import login_router
+app = FastAPI(
+    title=settings.APP_NAME,
+    version=settings.VERSION,
+    description="Automated Code Review Bot for GitHub Pull Requests"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],        # Allow requests from any origin
+    allow_credentials=True,     # Whether to include cookies/authorization headers
+    allow_methods=["*"],        # Allow all HTTP methods: GET, POST, OPTIONS, etc.
+    allow_headers=["*"],        # Allow all custom headers
+)
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -25,15 +42,10 @@ except ValueError as e:
     logger.error(f"Configuration error: {e}")
     raise
 
-app = FastAPI(
-    title=settings.APP_NAME,
-    version=settings.VERSION,
-    description="Automated Code Review Bot for GitHub Pull Requests"
-)
-
 # Include webhook router
 app.include_router(webhook_router, prefix="/webhook", tags=["webhook"])
 app.include_router(user_router, prefix="/users", tags=["users"])
+app.include_router(login_router, prefix="/login", tags=["login"])
 app.include_router(repo_router, prefix="/repos", tags=["repos"])
 app.include_router(pull_request_router, prefix="/pull-requests", tags=["pull_requests"])
 app.include_router(issues_router, prefix="/issues", tags=["issues"])
