@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter,HTTPException
 from ..firebase.firebase_database import Database
 from pydantic import BaseModel
 import requests
@@ -27,6 +27,18 @@ def get_all_remote_repos(user_id):
     github_url=f"https://api.github.com/users/{user_name}/repos"
     github_public_repo = requests.get(github_url).json()
     return github_public_repo
+
+@repo_router.delete("/remove/{repo_id}")
+def remove_repo(repo_id):
+    try:
+        repo_ref = db.collection('repos').document(repo_id)
+        if repo_ref.get().exists:
+            repo_ref.delete()
+            return {"message":"Repo deleted successfully"}
+        else:
+            raise HTTPException(status=404,detail="repo no found")
+    except Exception as e:
+        raise HTTPException(status=500,detail=str(e))
 
 @repo_router.post("/")
 def add_repo(repo: Repo):

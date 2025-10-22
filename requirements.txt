@@ -13,3 +13,5 @@ firebase-admin
 pydantic
 google-cloud
 bcrypt
+httpx
+pyjwt
