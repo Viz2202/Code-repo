@@ -19,6 +19,7 @@ class Signup(BaseModel):
     emailid: str
     password: str
     github_username: str
+    gitlab_username: str
 
 class UserOut(BaseModel):
     name: str
@@ -65,6 +66,7 @@ def signup(user: Signup):
             "name": user.name,
             "email": user.emailid,
             "github_username": user.github_username,
+            "gitlab_username":user.gitlab_username,
             "password": hash_password,
             "user_id": user_id
         })

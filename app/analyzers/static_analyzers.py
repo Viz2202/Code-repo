@@ -9,6 +9,7 @@ from ..mygroq import MyGroq
 import os
 import requests
 import datetime
+import urllib.parse
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +83,7 @@ class StaticAnalyzer:
         logger.info(f"JavaScript analysis placeholder for {file_path}")
         return []
     
-    def get_changed_files(self, response: Dict) -> List[str]:
+    def get_changed_files_github(self, response: Dict) -> List[str]:
         repo_name = response.get('repository', {}).get('full_name', '')
         pull_request_number = response.get('pull_request', {}).get('number')
         changed_files_url = f"https://api.github.com/repos/{repo_name}/pulls/{pull_request_number}/files"
@@ -94,11 +95,36 @@ class StaticAnalyzer:
         json_data = json.loads(response2.text)
         return json_data
     
-    def getchanges(self,strs):        
+    def get_changed_files_gitlab(self,response: Dict) -> List[str]:
+        repoid = response.get('repository',{}).get('id','')
+        pull_request_number = response.get('pull_request',{}).get('number')
+        changed_files_url = f"https://gitlab.com/api/v4/projects/{repoid}/merge_requests/{pull_request_number}/changes"
+        response2 = requests.get(changed_files_url)
+        json_data = json.loads(response2.text)
+        branch = json_data.get("source_branch")
+        list1 = json_data.get("changes",[])
+        output = []
+        for elem in list1:
+            file_path = elem["new_path"]
+            encoded_path = urllib.parse.quote(file_path,safe='')
+            raw_url = f"https://gitlab.com/api/v4/projects/{repoid}/repository/files/{encoded_path}/raw?ref={branch}"    
+            output.append({"raw_url":raw_url,"patch":elem["diff"],"filename":file_path})
+        return output
+
+    def get_changed_files(self,response:Dict) -> List[str]:
+        platform = response.get('platform')
+        if platform == "github":
+            return self.get_changed_files_github(response)
+        elif platform == "gitlab":
+            return self.get_changed_files_gitlab(response)
+    
+    def getchanges(self, strs):
         lines = strs.split('\n')
-        added_lines = [line[1:] for line in lines if line.startswith('+') and not line.startswith('+++')]
-        result= '\n'.join(added_lines)
-        return result
+        added_lines = [
+            line[1:] for line in lines
+            if line.startswith('+') and not line.startswith('+++') and len(line) > 1
+        ]
+        return '\n'.join(added_lines)
     
     def analyze_files(self, response: Dict) -> List[Dict[str, Any]]:
         """Analyze multiple files grouped by type"""
@@ -106,6 +132,7 @@ class StaticAnalyzer:
         repo_name = response.get('repository', {}).get('full_name', '')
         pull_request_number = response.get('pull_request', {}).get('number')
         repoid= response.get('repository', {}).get('id', '')
+        platform = response.get('platform')
         raw_url_and_patch = []
         for file in changed_files:
             raw_url_and_patch.append({
@@ -113,10 +140,8 @@ class StaticAnalyzer:
                 'patch': self.getchanges(file.get('patch', '')),
                 'file_name': file.get('filename')
             })
-        all_issues = ""
         file_name_and_issues = []
-        # Analyze Python files
-        changes_and_file= GetFile().fetch_file(raw_url_and_patch)
+        changes_and_file= GetFile().fetch_file(raw_url_and_patch,platform)
         for change, file_text, file_name in changes_and_file:
             issues= MyGroq.review(change,file_text)
             file_name_and_issues.append({
@@ -125,6 +150,7 @@ class StaticAnalyzer:
                 'repo_name': repo_name,
                 'pull_request_number': pull_request_number,
                 'repoid': repoid,
+                'platform':platform,
                 'time': str(datetime.datetime.now())
             })
             # print("***********************************************************************************")

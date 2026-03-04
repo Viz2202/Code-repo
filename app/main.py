@@ -15,6 +15,7 @@ from .routes.issues_router import Issues, issues_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routes.login_router import login_router
+# from .routes.auth_routes import auth_router
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.VERSION,
@@ -49,6 +50,7 @@ app.include_router(login_router, prefix="/login", tags=["login"])
 app.include_router(repo_router, prefix="/repos", tags=["repos"])
 app.include_router(pull_request_router, prefix="/pull-requests", tags=["pull_requests"])
 app.include_router(issues_router, prefix="/issues", tags=["issues"])
+# app.include_router(auth_router,prefix='/auth',tags=["auth"])
 
 @app.get("/")
 async def root():
