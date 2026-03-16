@@ -7,7 +7,7 @@ class MyGroq(Groq):
     load_dotenv()
     client = Groq(api_key= os.environ.get("GROQ_API_KEY"))
     completion = client.chat.completions.create(
-        model="meta-llama/llama-4-maverick-17b-128e-instruct",
+        model="llama-3.3-70b-versatile",
         messages=[
           {
               "role": "system",
